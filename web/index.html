@@ -1,178 +1,275 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#070b16">
-    <meta name="description" content="JARVIS INFINITY yapay zekâ asistanı">
-    <title>JARVIS INFINITY</title>
-    <link rel="manifest" href="/static/manifest.webmanifest">
-    <link rel="stylesheet" href="/static/style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#050a12">
+<title>JARVIS INFINITY</title>
+<link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-<div class="app-container">
 
-    <header class="topbar">
-        <div class="brand">
-            <div class="brand-icon">J</div>
-            <div>
-                <h1>JARVIS INFINITY</h1>
-                <span>ADVANCED AI ASSISTANT</span>
-            </div>
-        </div>
-        <div class="status">
-            <span class="status-dot"></span>
-            Sistem hazır
-        </div>
-    </header>
+<div class="shell">
 
-    <main>
-        <section id="auth-section" class="auth-card">
-            <div class="welcome-logo">J</div>
-            <h2>JARVIS'e Hoş Geldin</h2>
-            <p>Kişisel yapay zekâ asistanına bağlan.</p>
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark">∞</div>
+    <div>
+      <b>JARVIS</b>
+      <strong>INFINITY</strong>
+    </div>
+  </div>
 
-            <div class="auth-tabs">
-                <button id="login-tab" class="active" type="button">Giriş Yap</button>
-                <button id="register-tab" type="button">Kayıt Ol</button>
-            </div>
+  <nav class="topnav">
+    <a href="#hub">Ana Sayfa</a>
+    <a href="#agents">Asistanlar</a>
+    <a href="#chat-section">Sohbet</a>
+    <a href="#memory-section">Hafıza</a>
+  </nav>
 
-            <form id="auth-form">
-                <label for="email">E-posta adresi</label>
-                <input id="email" type="email"
-                       placeholder="ornek@email.com" required>
+  <div class="top-status">● Sistem arayüzü</div>
+</header>
 
-                <label for="password">Şifre</label>
-                <input id="password" type="password"
-                       placeholder="En az 10 karakter"
-                       minlength="10" required>
+<main>
 
-                <button id="auth-submit" class="primary-btn" type="submit">
-                    Giriş Yap
-                </button>
-            </form>
-            <p id="auth-message" class="message"></p>
-        </section>
+<section id="auth-section" class="auth-screen">
 
-        <section id="chat-section" hidden>
+  <div class="auth-art">
+    <div class="avatar-circle">
+      <div class="avatar-core">J</div>
+    </div>
+    <h2>JARVIS INFINITY</h2>
+    <p>Kişisel Yapay Zekâ Asistanın</p>
+  </div>
 
-            <div class="user-bar">
-                <span id="user-email"></span>
-                <button id="logout-btn" type="button">Çıkış Yap</button>
-            </div>
+  <div class="auth-card">
+    <span class="eyebrow">ADVANCED PERSONAL AI</span>
+    <h1>Kontrol sende.</h1>
+    <p>JARVIS INFINITY hesabına giriş yap.</p>
 
-            <section class="welcome">
-                <div class="welcome-logo">J</div>
-                <h2>JARVIS INFINITY</h2>
-                <p>Kişisel yapay zekâ kontrol merkezine hoş geldin.</p>
-            </section>
+    <div class="auth-tabs">
+      <button id="login-tab" class="active" type="button">
+        Giriş Yap
+      </button>
+      <button id="register-tab" type="button">
+        Kayıt Ol
+      </button>
+    </div>
 
-            <section class="memory-section">
-                <h3>◈ Sistem Kontrol Merkezi</h3>
-                <div class="dashboard-grid">
-                    <div class="dashboard-card">
-                        <span>◆</span>
-                        <strong>Yapay Zekâ</strong>
-                        <small>Bağlantı durumu</small>
-                        <b>Aktif arayüz</b>
-                    </div>
-                    <div class="dashboard-card">
-                        <span>◉</span>
-                        <strong>Ses Sistemi</strong>
-                        <small>Konuşma özellikleri</small>
-                        <b>Tarayıcı desteği</b>
-                    </div>
-                    <div class="dashboard-card">
-                        <span>▤</span>
-                        <strong>Hafıza</strong>
-                        <small>Kişisel kayıtlar</small>
-                        <b>Hafıza modülü</b>
-                    </div>
-                    <div class="dashboard-card">
-                        <span>⌘</span>
-                        <strong>Uzman Ajanlar</strong>
-                        <small>Görev yönlendirme</small>
-                        <b>Ajan altyapısı</b>
-                    </div>
-                </div>
-                <p class="message">
-                    Not: Kartlar arayüz göstergeleridir; her modülün
-                    gerçek işlevi ayrıca etkinleştirilmelidir.
-                </p>
-            </section>
+    <form id="auth-form">
+      <label for="email">E-posta adresi</label>
+      <input id="email" type="email"
+        placeholder="ornek@email.com" required>
 
-            <section class="memory-section">
-                <h3>◈ Uzman Modüller</h3>
-                <div class="dashboard-grid">
-                    <div class="dashboard-card">
-                        <span>⌕</span>
-                        <strong>Araştırma</strong>
-                        <small>Bilgi ve kaynak analizi</small>
-                    </div>
-                    <div class="dashboard-card">
-                        <span>⌘</span>
-                        <strong>Yazılım Laboratuvarı</strong>
-                        <small>Kod ve hata analizi</small>
-                    </div>
-                    <div class="dashboard-card">
-                        <span>✧</span>
-                        <strong>Yaratıcı Asistan</strong>
-                        <small>Metin ve fikir üretimi</small>
-                    </div>
-                    <div class="dashboard-card">
-                        <span>◎</span>
-                        <strong>Planlama</strong>
-                        <small>Görev ve organizasyon</small>
-                    </div>
-                </div>
-            </section>
+      <label for="password">Şifre</label>
+      <input id="password" type="password"
+        placeholder="En az 10 karakter"
+        minlength="10" required>
 
-            <section class="memory-section">
-                <h3>◈ JARVIS Sohbet Merkezi</h3>
-                <p>Yazabilir veya mikrofon üzerinden konuşabilirsin.</p>
+      <button id="auth-submit" class="primary-btn" type="submit">
+        Giriş Yap →
+      </button>
+    </form>
 
-                <div id="chat-messages" class="chat-messages">
-                    <div class="assistant-message">
-                        Merhaba! Ben JARVIS INFINITY.
-                        Sana nasıl yardımcı olabilirim?
-                    </div>
-                </div>
+    <p id="auth-message" class="message"></p>
+  </div>
 
-                <form id="chat-form" class="chat-form">
-                    <textarea id="message-input"
-                              placeholder="JARVIS'e bir mesaj yaz..."
-                              rows="1" required></textarea>
-                    <button id="send-btn" type="submit">Gönder</button>
-                </form>
+</section>
 
-                <p id="chat-status" class="message"></p>
-            </section>
+<section id="chat-section" hidden>
 
-            <section class="memory-section">
-                <h3>◈ JARVIS Hafızası</h3>
-                <p>Hatırlamasını istediğin bilgileri buraya kaydedebilirsin.</p>
+<div class="workspace">
 
-                <form id="memory-form">
-                    <input id="memory-title" type="text"
-                           placeholder="Hafıza başlığı" required>
-                    <textarea id="memory-content"
-                              placeholder="JARVIS'in hatırlamasını istediğin bilgi..."
-                              required></textarea>
-                    <button type="submit">Hafızaya Kaydet</button>
-                </form>
+<aside class="sidebar">
 
-                <div id="memory-list"></div>
-            </section>
+  <div class="profile-card">
+    <div class="mini-avatar">J</div>
+    <div>
+      <b>JARVIS INFINITY</b>
+      <small>● Asistan arayüzü</small>
+    </div>
+  </div>
 
-        </section>
-    </main>
+  <div class="side-label">ÇALIŞMA ALANI</div>
 
-    <footer>
-        <p>JARVIS INFINITY © 2026 · Personal AI Assistant</p>
-    </footer>
+  <a class="side-link active" href="#hub">⌂ JARVIS Hub</a>
+  <a class="side-link" href="#chat-section">◉ Canlı Konuşma</a>
+  <a class="side-link" href="#chat-section">▤ Sohbet</a>
+  <a class="side-link" href="#agents">▧ Görsel Üret</a>
+  <a class="side-link" href="#agents">▷ Video Araçları</a>
+  <a class="side-link" href="#agents">♫ Ses / TTS</a>
+  <a class="side-link" href="#agents">▣ Dosya Analiz</a>
+  <a class="side-link" href="#agents">⌕ Araştırma</a>
+  <a class="side-link" href="#agents">⌘ Kod Asistanı</a>
+  <a class="side-link" href="#memory-section">▤ Hafıza</a>
+
+  <div class="sidebar-bottom">
+    <span id="user-email"></span>
+    <button id="logout-btn" type="button">↪ Çıkış Yap</button>
+  </div>
+
+</aside>
+
+<div class="main-column">
+
+<section id="hub" class="hero-panel">
+
+  <div class="hero-copy">
+    <span class="eyebrow">ADVANCED PERSONAL AI</span>
+    <h1>JARVIS <em>INFINITY</em></h1>
+    <p>Bir sonraki adım, senin komutun.</p>
+  </div>
+
+  <div class="hero-avatar">J</div>
+
+</section>
+
+<section class="welcome-card">
+  <div class="mini-avatar">J</div>
+  <div>
+    <b>JARVIS INFINITY'ye hoş geldin</b>
+    <p>Ben senin kişisel yapay zekâ asistanınım.</p>
+  </div>
+</section>
+
+<section class="panel">
+
+  <div class="section-heading">
+    <div>
+      <span class="eyebrow">INTERACTIVE ASSISTANT</span>
+      <h2>Canlı Sohbet Merkezi</h2>
+    </div>
+    <span class="live-pill">● Sohbet hazır</span>
+  </div>
+
+  <div id="chat-messages" class="chat-messages">
+    <div class="assistant-message">
+      Merhaba! Ben JARVIS INFINITY.
+      Sana nasıl yardımcı olabilirim?
+    </div>
+  </div>
+
+  <form id="chat-form" class="chat-form">
+    <textarea id="message-input"
+      placeholder="Mesajını yaz veya mikrofonla konuş..."
+      rows="1" required></textarea>
+
+    <button id="send-btn" type="submit">➤</button>
+  </form>
+
+  <p id="chat-status" class="message"></p>
+
+</section>
+
+<section id="agents" class="panel">
+
+  <span class="eyebrow">SPECIALIST TOOLS</span>
+  <h2>Uzman Çalışma Alanları</h2>
+
+  <div class="tool-grid">
+
+    <article class="tool-card cyan">
+      <span>✧</span>
+      <b>Genel Asistan</b>
+      <small>Sohbet ve öneriler</small>
+    </article>
+
+    <article class="tool-card purple">
+      <span>⌘</span>
+      <b>Kod Asistanı</b>
+      <small>Kod ve hata analizi</small>
+    </article>
+
+    <article class="tool-card pink">
+      <span>▧</span>
+      <b>Görsel Araçları</b>
+      <small>Görsel işlemleri</small>
+    </article>
+
+    <article class="tool-card blue">
+      <span>⌕</span>
+      <b>Araştırma</b>
+      <small>Bilgi değerlendirme</small>
+    </article>
+
+    <article class="tool-card gold">
+      <span>▤</span>
+      <b>Dosya Analizi</b>
+      <small>Belge inceleme</small>
+    </article>
+
+    <article class="tool-card red">
+      <span>◎</span>
+      <b>Güvenlik</b>
+      <small>Güvenli kullanım</small>
+    </article>
+
+  </div>
+
+</section>
+
+<section id="memory-section" class="panel">
+
+  <span class="eyebrow">PERSONAL MEMORY</span>
+  <h2>JARVIS Hafızası</h2>
+
+  <form id="memory-form" class="memory-form">
+
+    <input id="memory-title"
+      placeholder="Hafıza başlığı" required>
+
+    <textarea id="memory-content"
+      placeholder="Hatırlanacak bilgi..." required></textarea>
+
+    <button type="submit">Hafızaya Kaydet</button>
+
+  </form>
+
+  <div id="memory-list"></div>
+
+</section>
+
+</div>
+
+<aside class="rightbar">
+
+  <section class="panel">
+    <h3>Sistem Paneli</h3>
+    <div class="system-row">Yapay Zekâ <b>API bağlantısı</b></div>
+    <div class="system-row">Ses Sistemi <b>Tarayıcı desteği</b></div>
+    <div class="system-row">Hafıza <b>Hesap oturumu</b></div>
+    <div class="system-row">Canlı Görüşme <b>Kurulum gerekli</b></div>
+  </section>
+
+  <section class="panel">
+    <h3>Hızlı İşlemler</h3>
+    <a class="quick-link" href="#chat-section">◉ Mesaj Gönder</a>
+    <a class="quick-link" href="#agents">⌘ Uzman Modüller</a>
+    <a class="quick-link" href="#memory-section">▤ Hafızayı Aç</a>
+  </section>
+
+  <section class="avatar-panel">
+    <div class="avatar-circle small">
+      <div class="avatar-core">J</div>
+    </div>
+    <b>JARVIS INFINITY</b>
+    <span>Kişisel Asistanın</span>
+  </section>
+
+</aside>
+
+</div>
+</section>
+
+</main>
+
+<footer>
+JARVIS INFINITY · Kişisel Yapay Zekâ
+</footer>
 
 </div>
 
 <script src="/static/app.js"></script>
+
 </body>
-    </html>
+      </html>
