@@ -15,29 +15,24 @@ def hash_password(password: str) -> str:
     salt = secrets.token_bytes(16)
 
     hashed = hashlib.scrypt(
-        password.encode("utf-8"),
+        password.encode(),
         salt=salt,
         n=2**14,
         r=8,
         p=1
     )
 
-    return (
-        salt.hex()
-        + "$"
-        + hashed.hex()
-    )
+    return f"{salt.hex()}${hashed.hex()}"
 
 
 def verify_password(password: str, stored_hash: str) -> bool:
     try:
         salt_hex, hash_hex = stored_hash.split("$", 1)
-
         salt = bytes.fromhex(salt_hex)
         expected = bytes.fromhex(hash_hex)
 
         actual = hashlib.scrypt(
-            password.encode("utf-8"),
+            password.encode(),
             salt=salt,
             n=2**14,
             r=8,
@@ -54,15 +49,12 @@ def register(email: str, password: str):
     email = email.strip().lower()
 
     if "@" not in email or len(email) > 254:
-        raise ValueError("Geçerli bir e-posta adresi gir.")
+        raise ValueError("Geçerli bir e-posta gir.")
 
     if get_user_by_email(email):
         raise ValueError("Bu e-posta zaten kayıtlı.")
 
-    return create_user(
-        email,
-        hash_password(password)
-    )
+    return create_user(email, hash_password(password))
 
 
 def login(email: str, password: str):
@@ -78,10 +70,16 @@ def login(email: str, password: str):
 
 
 def get_serializer():
-    secret = settings.jarvis_api_token
+    secret = settings.session_secret
 
-    if not secret or secret == "change-me":
-        raise RuntimeError("Güçlü JARVIS_API_TOKEN ayarlanmalı.")
+    if (
+        not secret
+        or secret == "change-this-to-a-long-random-secret"
+        or len(secret) < 32
+    ):
+        raise RuntimeError(
+            "En az 32 karakterlik SESSION_SECRET ayarlamalısın."
+        )
 
     return URLSafeTimedSerializer(
         secret,
@@ -90,20 +88,13 @@ def get_serializer():
 
 
 def create_session(user_id: int):
-    return get_serializer().dumps({
-        "user_id": user_id
-    })
+    return get_serializer().dumps({"user_id": user_id})
 
 
 def read_session(token: str, max_age: int = 86400):
     try:
-        data = get_serializer().loads(
-            token,
-            max_age=max_age
-        )
-
-        user_id = int(data["user_id"])
-        return get_user_by_id(user_id)
+        data = get_serializer().loads(token, max_age=max_age)
+        return get_user_by_id(int(data["user_id"]))
 
     except (BadSignature, ValueError, KeyError, TypeError):
         return None
