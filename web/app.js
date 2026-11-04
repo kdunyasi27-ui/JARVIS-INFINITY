@@ -11,6 +11,7 @@ function getToken() {
 
     if (!token) {
         token = prompt("JARVIS API anahtarını gir:");
+
         if (token) {
             localStorage.setItem("jarvis_token", token.trim());
         }
@@ -32,14 +33,15 @@ async function checkSystem() {
         const response = await fetch("/api/health");
 
         if (!response.ok) {
-            throw new Error("Sistem yanıt vermiyor");
+            throw new Error("Bağlantı hatası");
         }
 
         const data = await response.json();
 
-        systemStatus.textContent = "Sistem çevrimiçi";
+        systemStatus.textContent = `${data.name} çevrimiçi`;
         statusDot.classList.add("online");
-    } catch (error) {
+
+    } catch {
         systemStatus.textContent = "Bağlantı bekleniyor";
         statusDot.classList.remove("online");
     }
@@ -48,9 +50,7 @@ async function checkSystem() {
 async function sendMessage() {
     const message = input.value.trim();
 
-    if (!message || sendButton.disabled) {
-        return;
-    }
+    if (!message || sendButton.disabled) return;
 
     const token = getToken();
 
@@ -61,6 +61,7 @@ async function sendMessage() {
 
     addMessage(message, "user");
     input.value = "";
+
     sendButton.disabled = true;
     sendButton.textContent = "Düşünüyor...";
 
@@ -72,7 +73,7 @@ async function sendMessage() {
                 "Authorization": `Bearer ${token}`
             },
             body: JSON.stringify({
-                message: message,
+                message,
                 conversation_id: conversationId
             })
         });
@@ -80,7 +81,7 @@ async function sendMessage() {
         const data = await response.json();
 
         if (!response.ok) {
-            if (response.status === 401 || response.status === 403) {
+            if (response.status === 401) {
                 localStorage.removeItem("jarvis_token");
             }
 
@@ -89,10 +90,14 @@ async function sendMessage() {
 
         conversationId = data.conversation_id;
 
-        addMessage(data.answer, "assistant");
+        addMessage(
+            `[${data.agent}] ${data.answer}`,
+            "assistant"
+        );
 
     } catch (error) {
         addMessage("Hata: " + error.message, "assistant");
+
     } finally {
         sendButton.disabled = false;
         sendButton.textContent = "Gönder";
@@ -102,7 +107,7 @@ async function sendMessage() {
 
 sendButton.addEventListener("click", sendMessage);
 
-input.addEventListener("keydown", function(event) {
+input.addEventListener("keydown", event => {
     if (event.key === "Enter" && !event.shiftKey) {
         event.preventDefault();
         sendMessage();
