@@ -3,142 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#080d18">
+    <meta name="theme-color" content="#070b16">
     <meta name="description" content="JARVIS INFINITY yapay zekâ asistanı">
     <title>JARVIS INFINITY</title>
-
     <link rel="manifest" href="/static/manifest.webmanifest">
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+<div class="app-container">
 
-    <div class="app-container">
-
-        <header class="topbar">
-            <div class="brand">
-                <div class="brand-icon">J</div>
-                <div>
-                    <h1>JARVIS INFINITY</h1>
-                    <span>Yapay Zekâ Asistanı</span>
-                </div>
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-icon">J</div>
+            <div>
+                <h1>JARVIS INFINITY</h1>
+                <span>ADVANCED AI ASSISTANT</span>
             </div>
-            <div class="status">
-                <span class="status-dot"></span>
-                Sistem
+        </div>
+        <div class="status">
+            <span class="status-dot"></span>
+            Sistem hazır
+        </div>
+    </header>
+
+    <main>
+        <section id="auth-section" class="auth-card">
+            <div class="welcome-logo">J</div>
+            <h2>JARVIS'e Hoş Geldin</h2>
+            <p>Kişisel yapay zekâ asistanına bağlan.</p>
+
+            <div class="auth-tabs">
+                <button id="login-tab" class="active" type="button">Giriş Yap</button>
+                <button id="register-tab" type="button">Kayıt Ol</button>
             </div>
-        </header>
 
-        <main>
+            <form id="auth-form">
+                <label for="email">E-posta adresi</label>
+                <input id="email" type="email"
+                       placeholder="ornek@email.com" required>
 
-            <section id="auth-section" class="auth-card">
-                <h2>JARVIS'e Hoş Geldin</h2>
-                <p>Devam etmek için giriş yap veya hesap oluştur.</p>
+                <label for="password">Şifre</label>
+                <input id="password" type="password"
+                       placeholder="En az 10 karakter"
+                       minlength="10" required>
 
-                <div class="auth-tabs">
-                    <button id="login-tab" class="active" type="button">
-                        Giriş Yap
-                    </button>
-                    <button id="register-tab" type="button">
-                        Kayıt Ol
-                    </button>
-                </div>
+                <button id="auth-submit" class="primary-btn" type="submit">
+                    Giriş Yap
+                </button>
+            </form>
+            <p id="auth-message" class="message"></p>
+        </section>
 
-                <form id="auth-form">
-                    <label for="email">E-posta</label>
-                    <input
-                        id="email"
-                        type="email"
-                        placeholder="ornek@email.com"
-                        required
-                    >
+        <section id="chat-section" hidden>
 
-                    <label for="password">Şifre</label>
-                    <input
-                        id="password"
-                        type="password"
-                        placeholder="En az 10 karakter"
-                        minlength="10"
-                        required
-                    >
+            <div class="user-bar">
+                <span id="user-email"></span>
+                <button id="logout-btn" type="button">Çıkış Yap</button>
+            </div>
 
-                    <button id="auth-submit" class="primary-btn" type="submit">
-                        Giriş Yap
-                    </button>
-                </form>
-
-                <p id="auth-message" class="message"></p>
+            <section class="welcome">
+                <div class="welcome-logo">J</div>
+                <h2>JARVIS INFINITY</h2>
+                <p>Kişisel yapay zekâ kontrol merkezine hoş geldin.</p>
             </section>
 
-            <section id="chat-section" hidden>
-
-                <div class="user-bar">
-                    <span id="user-email"></span>
-                    <button id="logout-btn" type="button">
-                        Çıkış Yap
-                    </button>
+            <section class="memory-section">
+                <h3>◈ Sistem Kontrol Merkezi</h3>
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <span>◆</span>
+                        <strong>Yapay Zekâ</strong>
+                        <small>Bağlantı durumu</small>
+                        <b>Aktif arayüz</b>
+                    </div>
+                    <div class="dashboard-card">
+                        <span>◉</span>
+                        <strong>Ses Sistemi</strong>
+                        <small>Konuşma özellikleri</small>
+                        <b>Tarayıcı desteği</b>
+                    </div>
+                    <div class="dashboard-card">
+                        <span>▤</span>
+                        <strong>Hafıza</strong>
+                        <small>Kişisel kayıtlar</small>
+                        <b>Hafıza modülü</b>
+                    </div>
+                    <div class="dashboard-card">
+                        <span>⌘</span>
+                        <strong>Uzman Ajanlar</strong>
+                        <small>Görev yönlendirme</small>
+                        <b>Ajan altyapısı</b>
+                    </div>
                 </div>
+                <p class="message">
+                    Not: Kartlar arayüz göstergeleridir; her modülün
+                    gerçek işlevi ayrıca etkinleştirilmelidir.
+                </p>
+            </section>
 
-                <div class="welcome">
-                    <div class="welcome-logo">J</div>
-                    <h2>Ben JARVIS INFINITY</h2>
-                    <p>Nasıl yardımcı olabilirim?</p>
+            <section class="memory-section">
+                <h3>◈ Uzman Modüller</h3>
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <span>⌕</span>
+                        <strong>Araştırma</strong>
+                        <small>Bilgi ve kaynak analizi</small>
+                    </div>
+                    <div class="dashboard-card">
+                        <span>⌘</span>
+                        <strong>Yazılım Laboratuvarı</strong>
+                        <small>Kod ve hata analizi</small>
+                    </div>
+                    <div class="dashboard-card">
+                        <span>✧</span>
+                        <strong>Yaratıcı Asistan</strong>
+                        <small>Metin ve fikir üretimi</small>
+                    </div>
+                    <div class="dashboard-card">
+                        <span>◎</span>
+                        <strong>Planlama</strong>
+                        <small>Görev ve organizasyon</small>
+                    </div>
                 </div>
+            </section>
+
+            <section class="memory-section">
+                <h3>◈ JARVIS Sohbet Merkezi</h3>
+                <p>Yazabilir veya mikrofon üzerinden konuşabilirsin.</p>
 
                 <div id="chat-messages" class="chat-messages">
                     <div class="assistant-message">
-                        Merhaba! Ben JARVIS INFINITY. Sana nasıl yardımcı
-                        olabilirim?
+                        Merhaba! Ben JARVIS INFINITY.
+                        Sana nasıl yardımcı olabilirim?
                     </div>
                 </div>
 
                 <form id="chat-form" class="chat-form">
-                    <textarea
-                        id="message-input"
-                        placeholder="JARVIS'e bir mesaj yaz..."
-                        rows="1"
-                        required
-                    ></textarea>
-
-                    <button id="send-btn" type="submit">
-                        Gönder
-                    </button>
+                    <textarea id="message-input"
+                              placeholder="JARVIS'e bir mesaj yaz..."
+                              rows="1" required></textarea>
+                    <button id="send-btn" type="submit">Gönder</button>
                 </form>
 
                 <p id="chat-status" class="message"></p>
-
-                <section class="memory-section">
-                    <h3>JARVIS Hafızası</h3>
-
-                    <form id="memory-form">
-                        <input
-                            id="memory-title"
-                            type="text"
-                            placeholder="Hafıza başlığı"
-                            required
-                        >
-
-                        <textarea
-                            id="memory-content"
-                            placeholder="JARVIS'in hatırlamasını istediğin bilgi..."
-                            required
-                        ></textarea>
-
-                        <button type="submit">Hafızaya Kaydet</button>
-                    </form>
-
-                    <div id="memory-list"></div>
-                </section>
-
             </section>
 
-        </main>
+            <section class="memory-section">
+                <h3>◈ JARVIS Hafızası</h3>
+                <p>Hatırlamasını istediğin bilgileri buraya kaydedebilirsin.</p>
 
-        <footer>
-            <p>JARVIS INFINITY © 2026</p>
-        </footer>
+                <form id="memory-form">
+                    <input id="memory-title" type="text"
+                           placeholder="Hafıza başlığı" required>
+                    <textarea id="memory-content"
+                              placeholder="JARVIS'in hatırlamasını istediğin bilgi..."
+                              required></textarea>
+                    <button type="submit">Hafızaya Kaydet</button>
+                </form>
 
-    </div>
+                <div id="memory-list"></div>
+            </section>
 
-    <script src="/static/app.js"></script>
+        </section>
+    </main>
+
+    <footer>
+        <p>JARVIS INFINITY © 2026 · Personal AI Assistant</p>
+    </footer>
+
+</div>
+
+<script src="/static/app.js"></script>
 </body>
     </html>
