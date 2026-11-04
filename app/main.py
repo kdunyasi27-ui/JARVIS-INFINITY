@@ -2,22 +2,38 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import Depends, FastAPI, HTTPException, Response, Cookie
+from fastapi import (
+    Depends,
+    FastAPI,
+    HTTPException,
+    Response,
+    Cookie
+)
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from app.config import settings
-from app.db import init_db, save_message, get_history
+from app.db import (
+    init_db,
+    claim_conversation,
+    get_user_history,
+    save_user_message
+)
 from app.security import require_token
 from app.providers import generate, ModelUnavailable
 from app.agents import choose_agent, AGENTS, get_agent
 from app.evolution import daily_review
 from app.auth import (
-    register, login, create_session, read_session
+    register,
+    login,
+    create_session,
+    read_session
 )
 from app.workspace import (
-    save_memory, get_memories, delete_memory
+    save_memory,
+    get_memories,
+    delete_memory
 )
 
 
@@ -29,7 +45,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title=settings.app_name,
-    version="0.3.0",
+    version="0.4.0",
     lifespan=lifespan
 )
 
@@ -65,7 +81,9 @@ class MemoryRequest(BaseModel):
     content: str = Field(min_length=1, max_length=4000)
 
 
-def current_user(jarvis_session: str | None = Cookie(default=None)):
+def current_user(
+    jarvis_session: str | None = Cookie(default=None)
+):
     if not jarvis_session:
         raise HTTPException(
             status_code=401,
@@ -96,7 +114,7 @@ async def health():
     return {
         "status": "ok",
         "name": settings.app_name,
-        "version": "0.3.0"
+        "version": "0.4.0"
     }
 
 
@@ -112,11 +130,17 @@ async def register_user(body: RegisterRequest):
         }
 
     except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc)
+        )
 
 
 @app.post("/api/login")
-async def login_user(body: LoginRequest, response: Response):
+async def login_user(
+    body: LoginRequest,
+    response: Response
+):
     user = login(body.email, body.password)
 
     if not user:
@@ -161,7 +185,10 @@ async def me(user=Depends(current_user)):
     }
 
 
-@app.get("/api/agents", dependencies=[Depends(require_token)])
+@app.get(
+    "/api/agents",
+    dependencies=[Depends(require_token)]
+)
 async def agents():
     return [
         {
@@ -177,9 +204,30 @@ async def chat(
     body: ChatRequest,
     user=Depends(current_user)
 ):
-    conversation_id = body.conversation_id or str(uuid4())
+    conversation_id = (
+        body.conversation_id or str(uuid4())
+    )
 
-    history = get_history(conversation_id)
+    if not claim_conversation(
+        user["id"],
+        conversation_id
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Bu konuşmaya erişim izniniz yok."
+        )
+
+    try:
+        history = get_user_history(
+            user["id"],
+            conversation_id
+        )
+    except PermissionError:
+        raise HTTPException(
+            status_code=403,
+            detail="Bu konuşmaya erişim izniniz yok."
+        )
+
     agent_name = choose_agent(body.message)
     agent = get_agent(agent_name)
 
@@ -224,8 +272,19 @@ async def chat(
             detail="Yapay zekâ sağlayıcısına ulaşılamadı."
         )
 
-    save_message(conversation_id, "user", body.message)
-    save_message(conversation_id, "assistant", answer)
+    save_user_message(
+        user["id"],
+        conversation_id,
+        "user",
+        body.message
+    )
+
+    save_user_message(
+        user["id"],
+        conversation_id,
+        "assistant",
+        answer
+    )
 
     return {
         "conversation_id": conversation_id,
@@ -258,7 +317,10 @@ async def memory_remove(
     memory_id: int,
     user=Depends(current_user)
 ):
-    deleted = delete_memory(user["id"], memory_id)
+    deleted = delete_memory(
+        user["id"],
+        memory_id
+    )
 
     if not deleted:
         raise HTTPException(
