@@ -1,5 +1,9 @@
+
 let conversationId = null;
 let authMode = "login";
+let voiceEnabled = true;
+let recognition = null;
+let listening = false;
 
 const $ = (id) => document.getElementById(id);
 
@@ -32,6 +36,99 @@ async function api(url, options = {}) {
     return data;
 }
 
+function speak(text) {
+    if (!voiceEnabled || !("speechSynthesis" in window)) return;
+
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "tr-TR";
+    utterance.rate = 1;
+    utterance.pitch = 1;
+
+    const voices = window.speechSynthesis.getVoices();
+    const turkishVoice = voices.find(v => v.lang.toLowerCase().startsWith("tr"));
+
+    if (turkishVoice) utterance.voice = turkishVoice;
+
+    window.speechSynthesis.speak(utterance);
+}
+
+function setupVoice() {
+    const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    const voiceBar = document.createElement("div");
+    voiceBar.className = "voice-controls";
+    voiceBar.innerHTML = `
+        <button id="mic-btn" type="button">🎙️ Konuş</button>
+        <button id="voice-toggle" type="button">🔊 Ses açık</button>
+        <span id="voice-status">Sesli asistan hazır</span>
+    `;
+
+    chatForm.before(voiceBar);
+
+    $("voice-toggle").addEventListener("click", () => {
+        voiceEnabled = !voiceEnabled;
+        $("voice-toggle").textContent =
+            voiceEnabled ? "🔊 Ses açık" : "🔇 Sessiz";
+        if (!voiceEnabled) window.speechSynthesis?.cancel();
+    });
+
+    if (!SpeechRecognition) {
+        $("mic-btn").disabled = true;
+        $("voice-status").textContent =
+            "Bu tarayıcı ses tanımayı desteklemiyor. Chrome kullan.";
+        return;
+    }
+
+    recognition = new SpeechRecognition();
+    recognition.lang = "tr-TR";
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onstart = () => {
+        listening = true;
+        $("mic-btn").textContent = "⏹️ Dinliyorum...";
+        $("voice-status").textContent = "Seni dinliyorum...";
+    };
+
+    recognition.onend = () => {
+        listening = false;
+        $("mic-btn").textContent = "🎙️ Konuş";
+        if ($("voice-status")) {
+            $("voice-status").textContent = "Sesli asistan hazır";
+        }
+    };
+
+    recognition.onerror = (event) => {
+        $("voice-status").textContent =
+            "Mikrofon hatası: " + event.error;
+    };
+
+    recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        $("message-input").value = transcript;
+        chatForm.requestSubmit();
+    };
+
+    $("mic-btn").addEventListener("click", () => {
+        if (listening) {
+            recognition.stop();
+            return;
+        }
+
+        window.speechSynthesis?.cancel();
+
+        try {
+            recognition.start();
+        } catch (error) {
+            $("voice-status").textContent =
+                "Mikrofon başlatılamadı. Tekrar dene.";
+        }
+    });
+}
+
 function setAuthMode(mode) {
     authMode = mode;
 
@@ -47,13 +144,8 @@ function setAuthMode(mode) {
     $("auth-message").textContent = "";
 }
 
-$("login-tab").addEventListener("click", () => {
-    setAuthMode("login");
-});
-
-$("register-tab").addEventListener("click", () => {
-    setAuthMode("register");
-});
+$("login-tab").addEventListener("click", () => setAuthMode("login"));
+$("register-tab").addEventListener("click", () => setAuthMode("register"));
 
 authForm.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -102,12 +194,17 @@ async function loadUser() {
 
     $("user-email").textContent = user.email;
 
+    if (!$("mic-btn")) setupVoice();
+
     await loadMemories();
 }
 
 $("logout-btn").addEventListener("click", async () => {
     try {
         await api("/api/logout", { method: "POST" });
+
+        window.speechSynthesis?.cancel();
+        recognition?.stop();
 
         conversationId = null;
         chatSection.hidden = true;
@@ -166,6 +263,7 @@ chatForm.addEventListener("submit", async (event) => {
         conversationId = result.conversation_id;
 
         addMessage("assistant", result.answer);
+        speak(result.answer);
 
         showMessage(
             $("chat-status"),
@@ -206,7 +304,6 @@ async function loadMemories() {
                     await api("/api/memory/" + memory.id, {
                         method: "DELETE"
                     });
-
                     await loadMemories();
                 } catch (error) {
                     showMessage($("chat-status"), error.message, true);
