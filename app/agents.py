@@ -5,32 +5,97 @@ from dataclasses import dataclass
 class Agent:
     name: str
     purpose: str
+    instructions: str
 
 
 AGENTS = [
-    Agent("planner", "Görevleri analiz eder ve ayrıntılı plan oluşturur."),
-    Agent("researcher", "Araştırma yapar ve kaynakları karşılaştırır."),
-    Agent("coder", "Yazılım geliştirir ve kod taslakları hazırlar."),
-    Agent("reviewer", "Sonuçları hata ve güvenlik açısından denetler."),
-    Agent("writer", "Metin, belge ve içerik üretir."),
-    Agent("analyst", "Verileri inceler ve analiz eder."),
-    Agent("creative", "Yaratıcı fikirler, tasarımlar ve projeler üretir."),
-    Agent("teacher", "Konuları öğretir ve kişiye özel eğitim hazırlar."),
+    Agent(
+        "planner",
+        "Görevleri planlar.",
+        "Görevi aşamalara böl, öncelikleri ve riskleri belirle."
+    ),
+    Agent(
+        "researcher",
+        "Araştırma ve kaynak değerlendirme.",
+        "Bilgileri karşılaştır, belirsizlikleri açıkça belirt."
+    ),
+    Agent(
+        "coder",
+        "Yazılım geliştirme.",
+        "Çalışabilir, güvenli ve açıklamalı kod üret."
+    ),
+    Agent(
+        "reviewer",
+        "Kalite ve güvenlik kontrolü.",
+        "Hataları, eksikleri ve güvenlik risklerini bul."
+    ),
+    Agent(
+        "writer",
+        "Metin ve belge hazırlama.",
+        "Açık, anlaşılır ve amaca uygun metin yaz."
+    ),
+    Agent(
+        "analyst",
+        "Veri ve mantık analizi.",
+        "Verileri adım adım incele, sonuçları gerekçelendir."
+    ),
+    Agent(
+        "creative",
+        "Yaratıcı fikir üretimi.",
+        "Özgün ve uygulanabilir fikirler geliştir."
+    ),
+    Agent(
+        "teacher",
+        "Eğitim ve konu anlatımı.",
+        "Konuyu basitten karmaşığa örneklerle öğret."
+    ),
 ]
 
 
 def choose_agent(task: str) -> str:
     text = task.lower()
-    if any(x in text for x in ("kod", "python", "uygulama", "yazılım", "program", "hata")):
-        return "coder"
-    if any(x in text for x in ("araştır", "kaynak", "güncel", "karşılaştır", "bilgi bul")):
-        return "researcher"
-    if any(x in text for x in ("analiz", "veri", "istatistik", "rapor", "hesapla")):
-        return "analyst"
-    if any(x in text for x in ("plan", "proje", "adım adım")):
-        return "planner"
-    if any(x in text for x in ("öğret", "ders", "konu anlat", "sınav", "öğren")):
-        return "teacher"
-    if any(x in text for x in ("tasarla", "yaratıcı", "fikir", "görsel", "tasarım")):
-        return "creative"
+
+    rules = {
+        "coder": [
+            "kod", "python", "yazılım", "program",
+            "uygulama", "hata", "html", "javascript"
+        ],
+        "researcher": [
+            "araştır", "kaynak", "güncel",
+            "internette bul", "karşılaştır"
+        ],
+        "analyst": [
+            "analiz", "veri", "istatistik",
+            "hesapla", "rapor"
+        ],
+        "planner": [
+            "plan", "proje", "takvim",
+            "adım adım", "strateji"
+        ],
+        "teacher": [
+            "öğret", "ders", "konu anlat",
+            "sınav", "öğren"
+        ],
+        "creative": [
+            "tasarla", "yaratıcı", "fikir",
+            "isim bul", "görsel"
+        ],
+        "reviewer": [
+            "incele", "kontrol et", "denetle",
+            "güvenlik", "hata bul"
+        ],
+    }
+
+    for agent, keywords in rules.items():
+        if any(word in text for word in keywords):
+            return agent
+
     return "writer"
+
+
+def get_agent(agent_name: str) -> Agent:
+    for agent in AGENTS:
+        if agent.name == agent_name:
+            return agent
+
+    return AGENTS[4]
