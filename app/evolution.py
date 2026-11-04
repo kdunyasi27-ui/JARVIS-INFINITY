@@ -4,9 +4,7 @@ from app.db import connect
 
 
 def daily_review():
-
     with connect() as db:
-
         total_messages = db.execute(
             "SELECT COUNT(*) AS n FROM messages"
         ).fetchone()["n"]
@@ -22,25 +20,21 @@ def daily_review():
     report = f"""
 JARVIS INFINITY — GÜNLÜK GELİŞİM RAPORU
 
-Tarih:
-{datetime.now(timezone.utc).isoformat()}
+Tarih: {datetime.now(timezone.utc).isoformat()}
 
-TOPLAM MESAJ: {total_messages}
+Toplam mesaj: {total_messages}
+Toplam konuşma: {total_conversations}
+Bekleyen onay: {pending_approvals}
 
-TOPLAM KONUŞMA: {total_conversations}
+GELİŞİM ÖNERİLERİ
 
-BEKLEYEN ONAY: {pending_approvals}
-
-GELİŞİM ÖNERİLERİ:
-
-1. Model cevap kalitesini ölç.
+1. Model cevap kalitesini değerlendir.
 2. Başarısız görevleri incele.
 3. Güvenlik kontrollerini çalıştır.
-4. Yedeklerin durumunu doğrula.
+4. Veritabanı yedeklerini doğrula.
 5. Yeni özellik önerilerini değerlendir.
 
-OTOMATİK KOD DEĞİŞİKLİĞİ: KAPALI
-
+Otomatik kod değişikliği: KAPALI
 Önemli değişiklikler kullanıcı onayı gerektirir.
 """
 
