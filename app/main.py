@@ -11,7 +11,7 @@ from app.config import settings
 from app.db import init_db, save_message, get_history
 from app.security import require_token
 from app.providers import generate, ModelUnavailable
-from app.agents import choose_agent, AGENTS
+from app.agents import choose_agent, AGENTS, get_agent
 from app.evolution import daily_review
 
 
@@ -23,15 +23,13 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title=settings.app_name,
-    version="0.1.0",
+    version="0.2.0",
     lifespan=lifespan
 )
-
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 WEB_DIR = BASE_DIR / "web"
 INDEX_FILE = WEB_DIR / "index.html"
-
 
 if WEB_DIR.exists():
     app.mount(
@@ -51,10 +49,7 @@ async def home():
     if INDEX_FILE.exists():
         return FileResponse(str(INDEX_FILE))
 
-    return HTMLResponse(
-        "<h1>JARVIS INFINITY</h1>"
-        "<p>Kurulum devam ediyor.</p>"
-    )
+    return HTMLResponse("<h1>JARVIS INFINITY</h1>")
 
 
 @app.get("/api/health")
@@ -62,7 +57,7 @@ async def health():
     return {
         "status": "ok",
         "name": settings.app_name,
-        "version": "0.1.0"
+        "version": "0.2.0"
     }
 
 
@@ -82,25 +77,23 @@ async def chat(body: ChatRequest):
     conversation_id = body.conversation_id or str(uuid4())
 
     history = get_history(conversation_id)
-    agent = choose_agent(body.message)
+    agent_name = choose_agent(body.message)
+    agent = get_agent(agent_name)
 
-    messages = [
-        {
-            "role": "system",
-            "content": (
-                "Sen JARVIS INFINITY'sin. "
-                "Türkçe, açık ve dürüst yanıt ver. "
-                f"Seçilen uzman rolü: {agent}. "
-                "Bilmediğin bilgileri uydurma. "
-                "Yetkisiz erişim, gizli gözetim veya "
-                "güvenlik önlemlerini aşmaya yönelik "
-                "talimat verme."
-            )
-        }
-    ]
+    messages = [{
+        "role": "system",
+        "content": (
+            "Sen JARVIS INFINITY adlı gelişmiş bir yapay zekâ "
+            "asistanısın. Kullanıcıya Türkçe ve açık cevap ver. "
+            "Bilmediğin bilgileri uydurma. "
+            "Güvenlik önlemlerini aşmaya veya izinsiz erişime "
+            "yardım etme.\n\n"
+            f"Uzman ajan: {agent.name}\n"
+            f"Görev: {agent.instructions}"
+        )
+    }]
 
     messages.extend(history)
-
     messages.append({
         "role": "user",
         "content": body.message
@@ -118,10 +111,7 @@ async def chat(body: ChatRequest):
     except Exception:
         raise HTTPException(
             status_code=502,
-            detail=(
-                "Model sağlayıcısına ulaşılamadı. "
-                "Bağlantı ve model ayarlarını kontrol edin."
-            )
+            detail="Yapay zekâ sağlayıcısına ulaşılamadı."
         )
 
     save_message(conversation_id, "user", body.message)
@@ -129,7 +119,7 @@ async def chat(body: ChatRequest):
 
     return {
         "conversation_id": conversation_id,
-        "agent": agent,
+        "agent": agent_name,
         "answer": answer
     }
 
