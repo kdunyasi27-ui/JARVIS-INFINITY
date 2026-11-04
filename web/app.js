@@ -1,151 +1,263 @@
-"use strict";
-
-const messages = document.getElementById("messages");
-const input = document.getElementById("message-input");
-const sendButton = document.getElementById("send-button");
-const systemStatus = document.getElementById("system-status");
-const statusDot = document.querySelector(".status-dot");
-
 let conversationId = null;
-let sending = false;
+let authMode = "login";
 
-function getToken() {
-    let token = localStorage.getItem("jarvis_token");
+const $ = (id) => document.getElementById(id);
 
-    if (!token) {
-        token = prompt("JARVIS API anahtarını gir:");
+const authSection = $("auth-section");
+const chatSection = $("chat-section");
+const authForm = $("auth-form");
+const chatForm = $("chat-form");
 
-        if (token && token.trim()) {
-            token = token.trim();
-            localStorage.setItem("jarvis_token", token);
+function showMessage(element, message, error = false) {
+    element.textContent = message;
+    element.className = error ? "message error" : "message success";
+}
+
+async function api(url, options = {}) {
+    const response = await fetch(url, {
+        ...options,
+        credentials: "same-origin",
+        headers: {
+            "Content-Type": "application/json",
+            ...(options.headers || {})
         }
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+        throw new Error(data.detail || "Bir hata oluştu.");
     }
 
-    return token;
+    return data;
 }
 
-function addMessage(text, type) {
-    const message = document.createElement("div");
+function setAuthMode(mode) {
+    authMode = mode;
 
-    message.className = `message ${type}`;
-    message.textContent = text;
+    $("login-tab").classList.toggle("active", mode === "login");
+    $("register-tab").classList.toggle("active", mode === "register");
 
-    messages.appendChild(message);
-    messages.scrollTop = messages.scrollHeight;
+    $("auth-submit").textContent =
+        mode === "login" ? "Giriş Yap" : "Hesap Oluştur";
+
+    $("password").autocomplete =
+        mode === "login" ? "current-password" : "new-password";
+
+    $("auth-message").textContent = "";
 }
 
-async function checkSystem() {
+$("login-tab").addEventListener("click", () => {
+    setAuthMode("login");
+});
+
+$("register-tab").addEventListener("click", () => {
+    setAuthMode("register");
+});
+
+authForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const button = $("auth-submit");
+    button.disabled = true;
+
+    const email = $("email").value.trim();
+    const password = $("password").value;
+
     try {
-        const response = await fetch("/api/health");
+        if (authMode === "register") {
+            await api("/api/register", {
+                method: "POST",
+                body: JSON.stringify({ email, password })
+            });
 
-        if (!response.ok) {
-            throw new Error("Sunucu yanıt vermiyor.");
+            showMessage(
+                $("auth-message"),
+                "Kayıt başarılı. Şimdi giriş yapabilirsin."
+            );
+
+            setAuthMode("login");
+            return;
         }
 
-        const data = await response.json();
+        await api("/api/login", {
+            method: "POST",
+            body: JSON.stringify({ email, password })
+        });
 
-        systemStatus.textContent = `${data.name} çevrimiçi`;
-        statusDot.classList.add("online");
+        await loadUser();
 
     } catch (error) {
-        systemStatus.textContent = "Bağlantı bekleniyor";
-        statusDot.classList.remove("online");
+        showMessage($("auth-message"), error.message, true);
+    } finally {
+        button.disabled = false;
     }
+});
+
+async function loadUser() {
+    const user = await api("/api/me");
+
+    authSection.hidden = true;
+    chatSection.hidden = false;
+
+    $("user-email").textContent = user.email;
+
+    await loadMemories();
 }
 
-async function sendMessage() {
+$("logout-btn").addEventListener("click", async () => {
+    try {
+        await api("/api/logout", { method: "POST" });
+
+        conversationId = null;
+        chatSection.hidden = true;
+        authSection.hidden = false;
+
+        $("chat-messages").innerHTML = "";
+        $("auth-form").reset();
+
+        showMessage($("auth-message"), "Çıkış yapıldı.");
+
+    } catch (error) {
+        showMessage($("chat-status"), error.message, true);
+    }
+});
+
+function addMessage(role, content) {
+    const message = document.createElement("div");
+
+    message.className =
+        role === "user" ? "user-message" : "assistant-message";
+
+    message.textContent = content;
+
+    $("chat-messages").appendChild(message);
+
+    message.scrollIntoView({
+        behavior: "smooth",
+        block: "end"
+    });
+}
+
+chatForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const input = $("message-input");
+    const button = $("send-btn");
     const message = input.value.trim();
 
-    if (!message || sending) return;
+    if (!message) return;
 
-    const token = getToken();
-
-    if (!token) {
-        addMessage("API anahtarı girilmedi.", "assistant");
-        return;
-    }
-
-    addMessage(message, "user");
     input.value = "";
+    button.disabled = true;
 
-    sending = true;
-    sendButton.disabled = true;
-    sendButton.textContent = "Düşünüyor...";
+    addMessage("user", message);
+    showMessage($("chat-status"), "JARVIS düşünüyor...");
 
     try {
-        const response = await fetch("/api/chat", {
+        const result = await api("/api/chat", {
             method: "POST",
-
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
-
             body: JSON.stringify({
-                message: message,
+                message,
                 conversation_id: conversationId
             })
         });
 
-        const data = await response.json();
+        conversationId = result.conversation_id;
 
-        if (!response.ok) {
-            if (response.status === 401) {
-                localStorage.removeItem("jarvis_token");
-            }
+        addMessage("assistant", result.answer);
 
-            throw new Error(
-                data.detail || "Bir hata oluştu."
-            );
-        }
-
-        conversationId = data.conversation_id;
-
-        addMessage(
-            `[${data.agent}] ${data.answer}`,
-            "assistant"
+        showMessage(
+            $("chat-status"),
+            "Uzman ajan: " + result.agent
         );
 
     } catch (error) {
-        addMessage(
-            "Hata: " + error.message,
-            "assistant"
-        );
-
+        addMessage("assistant", "Hata: " + error.message);
+        showMessage($("chat-status"), error.message, true);
     } finally {
-        sending = false;
-        sendButton.disabled = false;
-        sendButton.textContent = "Gönder";
+        button.disabled = false;
         input.focus();
-    }
-}
-
-sendButton.addEventListener("click", sendMessage);
-
-input.addEventListener("keydown", function(event) {
-    if (
-        event.key === "Enter" &&
-        !event.shiftKey
-    ) {
-        event.preventDefault();
-        sendMessage();
     }
 });
 
-// PWA çevrimdışı dosya desteği
-if ("serviceWorker" in navigator) {
-    window.addEventListener("load", function() {
-        navigator.serviceWorker
-            .register("/static/sw.js")
-            .catch(function(error) {
-                console.error(
-                    "PWA kaydı başarısız:",
-                    error
-                );
+async function loadMemories() {
+    try {
+        const memories = await api("/api/memory");
+        const list = $("memory-list");
+
+        list.innerHTML = "";
+
+        memories.forEach((memory) => {
+            const item = document.createElement("div");
+            item.className = "memory-item";
+
+            const title = document.createElement("strong");
+            title.textContent = memory.title;
+
+            const content = document.createElement("p");
+            content.textContent = memory.content;
+
+            const remove = document.createElement("button");
+            remove.textContent = "Sil";
+
+            remove.addEventListener("click", async () => {
+                try {
+                    await api("/api/memory/" + memory.id, {
+                        method: "DELETE"
+                    });
+
+                    await loadMemories();
+                } catch (error) {
+                    showMessage($("chat-status"), error.message, true);
+                }
             });
+
+            item.append(title, content, remove);
+            list.appendChild(item);
+        });
+
+    } catch (error) {
+        showMessage($("chat-status"), error.message, true);
+    }
+}
+
+$("memory-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const title = $("memory-title").value.trim();
+    const content = $("memory-content").value.trim();
+
+    try {
+        await api("/api/memory", {
+            method: "POST",
+            body: JSON.stringify({ title, content })
+        });
+
+        $("memory-form").reset();
+        await loadMemories();
+
+        showMessage($("chat-status"), "Hafızaya kaydedildi.");
+
+    } catch (error) {
+        showMessage($("chat-status"), error.message, true);
+    }
+});
+
+async function startApp() {
+    try {
+        await loadUser();
+    } catch {
+        authSection.hidden = false;
+        chatSection.hidden = true;
+    }
+}
+
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/static/sw.js")
+            .catch((error) => console.error("PWA:", error));
     });
 }
 
-// Sistem kontrolü
-checkSystem();
-setInterval(checkSystem, 30000);
+startApp();
