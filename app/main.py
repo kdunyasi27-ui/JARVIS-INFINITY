@@ -4,6 +4,7 @@ from uuid import uuid4
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from app.config import settings
@@ -27,13 +28,15 @@ app = FastAPI(
 )
 
 
-WEB_DIR = Path("web")
+BASE_DIR = Path(__file__).resolve().parent.parent
+WEB_DIR = BASE_DIR / "web"
 INDEX_FILE = WEB_DIR / "index.html"
+
 
 if WEB_DIR.exists():
     app.mount(
         "/static",
-        __import__("fastapi").staticfiles.StaticFiles(directory=str(WEB_DIR)),
+        StaticFiles(directory=str(WEB_DIR)),
         name="static"
     )
 
@@ -50,7 +53,7 @@ async def home():
 
     return HTMLResponse(
         "<h1>JARVIS INFINITY</h1>"
-        "<p>Kurulum devam ediyor. Arayüz dosyaları henüz eklenmedi.</p>"
+        "<p>Kurulum devam ediyor.</p>"
     )
 
 
@@ -66,7 +69,10 @@ async def health():
 @app.get("/api/agents", dependencies=[Depends(require_token)])
 async def agents():
     return [
-        {"name": agent.name, "purpose": agent.purpose}
+        {
+            "name": agent.name,
+            "purpose": agent.purpose
+        }
         for agent in AGENTS
     ]
 
@@ -82,16 +88,19 @@ async def chat(body: ChatRequest):
         {
             "role": "system",
             "content": (
-                "Sen JARVIS INFINITY'sin. Türkçe, açık ve dürüst yanıt ver. "
+                "Sen JARVIS INFINITY'sin. "
+                "Türkçe, açık ve dürüst yanıt ver. "
                 f"Seçilen uzman rolü: {agent}. "
                 "Bilmediğin bilgileri uydurma. "
-                "Yetkisiz erişim, gizli gözetim veya güvenlik önlemlerini "
-                "aşmaya yönelik talimat verme."
+                "Yetkisiz erişim, gizli gözetim veya "
+                "güvenlik önlemlerini aşmaya yönelik "
+                "talimat verme."
             )
         }
     ]
 
     messages.extend(history)
+
     messages.append({
         "role": "user",
         "content": body.message
