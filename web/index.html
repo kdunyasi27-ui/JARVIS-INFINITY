@@ -6,6 +6,7 @@
     <meta name="theme-color" content="#080d18">
     <meta name="description" content="JARVIS INFINITY yapay zekâ asistanı">
     <title>JARVIS INFINITY</title>
+    <link rel="manifest" href="/static/manifest.webmanifest">
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
@@ -23,30 +24,55 @@
                 <span id="system-status">Sistem kontrol ediliyor</span>
             </div>
         </header>
+
         <main class="main">
             <section class="welcome">
                 <p class="eyebrow">KİŞİSEL YAPAY ZEKÂ ASİSTANIN</p>
                 <h2>Merhaba, nasıl yardımcı olabilirim?</h2>
-                <p>JARVIS INFINITY ile konuş, araştır, üret ve öğren.</p>
+                <p>JARVIS INFINITY ile konuş, üret, analiz et ve öğren.</p>
             </section>
+
             <section class="chat-panel">
                 <div id="messages" class="messages">
-                    <div class="message assistant">Merhaba! Ben JARVIS INFINITY. Sana nasıl yardımcı olabilirim?</div>
+                    <div class="message assistant">
+                        Merhaba! Ben JARVIS INFINITY. Sana nasıl yardımcı olabilirim?
+                    </div>
                 </div>
+
                 <div class="input-area">
-                    <textarea id="message-input" placeholder="JARVIS'e bir mesaj yaz..." rows="2"></textarea>
+                    <textarea
+                        id="message-input"
+                        placeholder="JARVIS'e bir mesaj yaz..."
+                        rows="2"
+                    ></textarea>
                     <button id="send-button" type="button">Gönder</button>
                 </div>
+
                 <p class="hint">Enter ile gönder, Shift + Enter ile yeni satır aç.</p>
             </section>
+
             <section class="tools">
-                <div class="tool-card"><span>01</span><h3>Araştırma</h3><p>Bilgileri analiz et ve açıkla.</p></div>
-                <div class="tool-card"><span>02</span><h3>Yazılım</h3><p>Kod üret ve geliştirme desteği al.</p></div>
-                <div class="tool-card"><span>03</span><h3>Analiz</h3><p>Fikirleri ve verileri incele.</p></div>
+                <div class="tool-card">
+                    <span>01</span>
+                    <h3>Araştırma</h3>
+                    <p>Bilgileri incele ve karşılaştır.</p>
+                </div>
+                <div class="tool-card">
+                    <span>02</span>
+                    <h3>Yazılım</h3>
+                    <p>Kod üret ve geliştirme desteği al.</p>
+                </div>
+                <div class="tool-card">
+                    <span>03</span>
+                    <h3>Analiz</h3>
+                    <p>Fikirleri ve verileri değerlendir.</p>
+                </div>
             </section>
         </main>
-        <footer>JARVIS INFINITY · Geliştirme sürümü 0.1.0</footer>
+
+        <footer>JARVIS INFINITY · Geliştirme sürümü 0.2.0</footer>
     </div>
+
     <script src="/static/app.js"></script>
 </body>
-  </html>
+    </html>
