@@ -1,4 +1,3 @@
-
 import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
@@ -11,20 +10,17 @@ def connect():
     db_path = Path(settings.database_path)
     db_path.parent.mkdir(parents=True, exist_ok=True)
 
-    connection = sqlite3.connect(
-        str(db_path),
-        timeout=30
-    )
-    connection.row_factory = sqlite3.Row
+    db = sqlite3.connect(str(db_path), timeout=30)
+    db.row_factory = sqlite3.Row
 
     try:
-        yield connection
-        connection.commit()
+        yield db
+        db.commit()
     except Exception:
-        connection.rollback()
+        db.rollback()
         raise
     finally:
-        connection.close()
+        db.close()
 
 
 def init_db():
@@ -35,44 +31,150 @@ def init_db():
                 conversation_id TEXT NOT NULL,
                 role TEXT NOT NULL,
                 content TEXT NOT NULL,
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
             );
 
             CREATE INDEX IF NOT EXISTS idx_messages_conversation
             ON messages(conversation_id);
 
-            CREATE TABLE IF NOT EXISTS review_reports (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                report TEXT NOT NULL,
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-            );
-
-            CREATE TABLE IF NOT EXISTS approvals (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                title TEXT NOT NULL DEFAULT '',
-                details TEXT NOT NULL DEFAULT '',
-                status TEXT NOT NULL DEFAULT 'pending',
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-            );
-
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 email TEXT NOT NULL UNIQUE,
                 password_hash TEXT NOT NULL,
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
             );
+
+            CREATE TABLE IF NOT EXISTS user_memories (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                content TEXT NOT NULL,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS user_conversations (
+                conversation_id TEXT PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_user_conversations_user
+            ON user_conversations(user_id);
         """)
+
+
+def create_user(email, password_hash):
+    with connect() as db:
+        cursor = db.execute(
+            "INSERT INTO users (email, password_hash) VALUES (?, ?)",
+            (email.lower().strip(), password_hash)
+        )
+        return cursor.lastrowid
+
+
+def get_user_by_email(email):
+    with connect() as db:
+        return db.execute(
+            "SELECT * FROM users WHERE email = ?",
+            (email.lower().strip(),)
+        ).fetchone()
+
+
+def get_user_by_id(user_id):
+    with connect() as db:
+        return db.execute(
+            "SELECT id, email, created_at FROM users WHERE id = ?",
+            (user_id,)
+        ).fetchone()
+
+
+def claim_conversation(user_id, conversation_id):
+    with connect() as db:
+        row = db.execute(
+            "SELECT user_id FROM user_conversations WHERE conversation_id = ?",
+            (conversation_id,)
+        ).fetchone()
+
+        if row:
+            return int(row["user_id"]) == int(user_id)
+
+        try:
+            db.execute(
+                """
+                INSERT INTO user_conversations (conversation_id, user_id)
+                VALUES (?, ?)
+                """,
+                (conversation_id, user_id)
+            )
+            return True
+        except sqlite3.IntegrityError:
+            row = db.execute(
+                "SELECT user_id FROM user_conversations WHERE conversation_id = ?",
+                (conversation_id,)
+            ).fetchone()
+
+            return bool(row and int(row["user_id"]) == int(user_id))
+
+
+def get_user_history(user_id, conversation_id, limit=30):
+    with connect() as db:
+        owner = db.execute(
+            """
+            SELECT user_id FROM user_conversations
+            WHERE conversation_id = ?
+            """,
+            (conversation_id,)
+        ).fetchone()
+
+        if not owner or int(owner["user_id"]) != int(user_id):
+            raise PermissionError("Bu konuşmaya erişim izniniz yok.")
+
+        rows = db.execute(
+            """
+            SELECT role, content
+            FROM messages
+            WHERE conversation_id = ?
+            ORDER BY id DESC
+            LIMIT ?
+            """,
+            (conversation_id, limit)
+        ).fetchall()
+
+        return [
+            {"role": row["role"], "content": row["content"]}
+            for row in reversed(rows)
+        ]
+
+
+def save_user_message(user_id, conversation_id, role, content):
+    if role not in ("user", "assistant", "system"):
+        raise ValueError("Geçersiz mesaj rolü.")
+
+    with connect() as db:
+        owner = db.execute(
+            """
+            SELECT user_id FROM user_conversations
+            WHERE conversation_id = ?
+            """,
+            (conversation_id,)
+        ).fetchone()
+
+        if not owner or int(owner["user_id"]) != int(user_id):
+            raise PermissionError("Bu konuşmaya erişim izniniz yok.")
+
+        db.execute(
+            """
+            INSERT INTO messages (conversation_id, role, content)
+            VALUES (?, ?, ?)
+            """,
+            (conversation_id, role, content)
+        )
 
 
 def save_message(conversation_id, role, content):
     with connect() as db:
         db.execute(
             """
-            INSERT INTO messages (
-                conversation_id,
-                role,
-                content
-            )
+            INSERT INTO messages (conversation_id, role, content)
             VALUES (?, ?, ?)
             """,
             (conversation_id, role, content)
@@ -80,63 +182,19 @@ def save_message(conversation_id, role, content):
 
 
 def get_history(conversation_id, limit=30):
-    limit = max(1, min(int(limit), 100))
-
     with connect() as db:
         rows = db.execute(
             """
             SELECT role, content
-            FROM (
-                SELECT id, role, content
-                FROM messages
-                WHERE conversation_id = ?
-                ORDER BY id DESC
-                LIMIT ?
-            )
-            ORDER BY id ASC
+            FROM messages
+            WHERE conversation_id = ?
+            ORDER BY id DESC
+            LIMIT ?
             """,
             (conversation_id, limit)
         ).fetchall()
 
-    return [dict(row) for row in rows]
-
-
-def create_user(email, password_hash):
-    with connect() as db:
-        cursor = db.execute(
-            """
-            INSERT INTO users (email, password_hash)
-            VALUES (?, ?)
-            """,
-            (email, password_hash)
-        )
-
-        return cursor.lastrowid
-
-
-def get_user_by_email(email):
-    with connect() as db:
-        row = db.execute(
-            """
-            SELECT id, email, password_hash, created_at
-            FROM users
-            WHERE email = ?
-            """,
-            (email,)
-        ).fetchone()
-
-    return dict(row) if row else None
-
-
-def get_user_by_id(user_id):
-    with connect() as db:
-        row = db.execute(
-            """
-            SELECT id, email, created_at
-            FROM users
-            WHERE id = ?
-            """,
-            (user_id,)
-        ).fetchone()
-
-    return dict(row) if row else None
+        return [
+            {"role": row["role"], "content": row["content"]}
+            for row in reversed(rows)
+    ]
