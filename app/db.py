@@ -54,6 +54,13 @@ def init_db():
                 status TEXT NOT NULL DEFAULT 'pending',
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             );
+
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT NOT NULL UNIQUE,
+                password_hash TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
         """)
 
 
@@ -92,3 +99,44 @@ def get_history(conversation_id, limit=30):
         ).fetchall()
 
     return [dict(row) for row in rows]
+
+
+def create_user(email, password_hash):
+    with connect() as db:
+        cursor = db.execute(
+            """
+            INSERT INTO users (email, password_hash)
+            VALUES (?, ?)
+            """,
+            (email, password_hash)
+        )
+
+        return cursor.lastrowid
+
+
+def get_user_by_email(email):
+    with connect() as db:
+        row = db.execute(
+            """
+            SELECT id, email, password_hash, created_at
+            FROM users
+            WHERE email = ?
+            """,
+            (email,)
+        ).fetchone()
+
+    return dict(row) if row else None
+
+
+def get_user_by_id(user_id):
+    with connect() as db:
+        row = db.execute(
+            """
+            SELECT id, email, created_at
+            FROM users
+            WHERE id = ?
+            """,
+            (user_id,)
+        ).fetchone()
+
+    return dict(row) if row else None
