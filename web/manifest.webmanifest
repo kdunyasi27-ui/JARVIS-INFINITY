@@ -1,0 +1,24 @@
+{
+  "name": "JARVIS INFINITY",
+  "short_name": "JARVIS",
+  "description": "Kişisel yapay zekâ asistanı",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#080d18",
+  "theme_color": "#080d18",
+  "lang": "tr",
+  "icons": [
+    {
+      "src": "/static/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
