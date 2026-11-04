@@ -7,10 +7,10 @@ from app.config import settings
 
 @contextmanager
 def connect():
-    db_path = Path(settings.database_path)
-    db_path.parent.mkdir(parents=True, exist_ok=True)
+    path = Path(settings.database_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
 
-    db = sqlite3.connect(str(db_path), timeout=30)
+    db = sqlite3.connect(str(path), timeout=30)
     db.row_factory = sqlite3.Row
 
     try:
@@ -44,13 +44,6 @@ def init_db():
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             );
 
-            CREATE TABLE IF NOT EXISTS user_memories (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                content TEXT NOT NULL,
-                created_at TEXT DEFAULT CURRENT_TIMESTAMP
-            );
-
             CREATE TABLE IF NOT EXISTS user_conversations (
                 conversation_id TEXT PRIMARY KEY,
                 user_id INTEGER NOT NULL,
@@ -59,6 +52,47 @@ def init_db():
 
             CREATE INDEX IF NOT EXISTS idx_user_conversations_user
             ON user_conversations(user_id);
+        """)
+
+        columns = {
+            row["name"]
+            for row in db.execute(
+                "PRAGMA table_info(user_memories)"
+            ).fetchall()
+        }
+
+        if not columns:
+            db.execute("""
+                CREATE TABLE user_memories (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    title TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+        else:
+            if "title" not in columns:
+                db.execute("""
+                    ALTER TABLE user_memories
+                    ADD COLUMN title TEXT NOT NULL DEFAULT ''
+                """)
+
+            if "content" not in columns:
+                db.execute("""
+                    ALTER TABLE user_memories
+                    ADD COLUMN content TEXT NOT NULL DEFAULT ''
+                """)
+
+            db.execute("""
+                UPDATE user_memories
+                SET title = 'Eski kayıt ' || id
+                WHERE title = ''
+            """)
+
+        db.execute("""
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_memory_user_title
+            ON user_memories(user_id, title)
         """)
 
 
@@ -111,7 +145,6 @@ def claim_conversation(user_id, conversation_id):
                 "SELECT user_id FROM user_conversations WHERE conversation_id = ?",
                 (conversation_id,)
             ).fetchone()
-
             return bool(row and int(row["user_id"]) == int(user_id))
 
 
@@ -126,15 +159,13 @@ def get_user_history(user_id, conversation_id, limit=30):
         ).fetchone()
 
         if not owner or int(owner["user_id"]) != int(user_id):
-            raise PermissionError("Bu konuşmaya erişim izniniz yok.")
+            raise PermissionError("Konuşmaya erişim izniniz yok.")
 
         rows = db.execute(
             """
-            SELECT role, content
-            FROM messages
+            SELECT role, content FROM messages
             WHERE conversation_id = ?
-            ORDER BY id DESC
-            LIMIT ?
+            ORDER BY id DESC LIMIT ?
             """,
             (conversation_id, limit)
         ).fetchall()
@@ -146,9 +177,6 @@ def get_user_history(user_id, conversation_id, limit=30):
 
 
 def save_user_message(user_id, conversation_id, role, content):
-    if role not in ("user", "assistant", "system"):
-        raise ValueError("Geçersiz mesaj rolü.")
-
     with connect() as db:
         owner = db.execute(
             """
@@ -159,7 +187,7 @@ def save_user_message(user_id, conversation_id, role, content):
         ).fetchone()
 
         if not owner or int(owner["user_id"]) != int(user_id):
-            raise PermissionError("Bu konuşmaya erişim izniniz yok.")
+            raise PermissionError("Konuşmaya erişim izniniz yok.")
 
         db.execute(
             """
@@ -185,11 +213,9 @@ def get_history(conversation_id, limit=30):
     with connect() as db:
         rows = db.execute(
             """
-            SELECT role, content
-            FROM messages
+            SELECT role, content FROM messages
             WHERE conversation_id = ?
-            ORDER BY id DESC
-            LIMIT ?
+            ORDER BY id DESC LIMIT ?
             """,
             (conversation_id, limit)
         ).fetchall()
@@ -197,4 +223,4 @@ def get_history(conversation_id, limit=30):
         return [
             {"role": row["role"], "content": row["content"]}
             for row in reversed(rows)
-    ]
+        ]
