@@ -1,3 +1,4 @@
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -10,12 +11,18 @@ class Settings(BaseSettings):
 
     database_path: str = "./data/jarvis.db"
 
+    # Normal yapay zekâ bağlantısı
     model_base_url: str = ""
     model_api_key: str = ""
     model_name: str = ""
     model_fallbacks: str = ""
     model_timeout_seconds: int = 45
 
+    # Gemini Live - gerçek zamanlı sesli asistan
+    gemini_live_api_key: str = ""
+    gemini_live_model: str = "gemini-3.8-live"
+
+    # İnternet araması
     search_api_url: str = ""
     search_api_key: str = ""
 
