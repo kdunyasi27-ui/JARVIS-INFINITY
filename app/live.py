@@ -45,7 +45,6 @@ async def live_voice(websocket: WebSocket):
     setup_message = {
         "setup": {
             "model": f"models/{model}",
-            "responseModalities": ["AUDIO"],
             "systemInstruction": {
                 "parts": [{
                     "text": (
@@ -59,6 +58,7 @@ async def live_voice(websocket: WebSocket):
             "inputAudioTranscription": {},
             "outputAudioTranscription": {},
             "generationConfig": {
+                "responseModalities": ["AUDIO"],
                 "speechConfig": {
                     "voiceConfig": {
                         "prebuiltVoiceConfig": {
