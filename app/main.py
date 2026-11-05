@@ -1,3 +1,4 @@
+
 from contextlib import asynccontextmanager
 from pathlib import Path
 from uuid import uuid4
@@ -36,6 +37,9 @@ from app.workspace import (
     delete_memory
 )
 
+# Canlı ses bağlantısı
+from app.live import router as live_router
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -45,9 +49,13 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title=settings.app_name,
-    version="0.4.0",
+    version="0.5.0",
     lifespan=lifespan
 )
+
+# Gemini Live WebSocket rotasını ekle
+app.include_router(live_router)
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 WEB_DIR = BASE_DIR / "web"
@@ -114,7 +122,7 @@ async def health():
     return {
         "status": "ok",
         "name": settings.app_name,
-        "version": "0.4.0"
+        "version": "0.5.0"
     }
 
 
