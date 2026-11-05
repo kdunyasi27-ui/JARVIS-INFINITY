@@ -165,10 +165,18 @@ async def live_voice(websocket: WebSocket):
             None
         )
 
+        received = getattr(exc, "rcvd", None)
+        sent = getattr(exc, "sent", None)
+
         logger.error(
-            "Gemini Live hata türü: %s | HTTP durumu: %s",
+            "Gemini Live hata: %s | HTTP: %s | "
+            "Gelen kapatma kodu: %s | Gelen neden: %s | "
+            "Gönderilen kapatma: %s",
             type(exc).__name__,
-            status
+            status,
+            getattr(received, "code", None),
+            getattr(received, "reason", None),
+            getattr(sent, "code", None)
         )
 
         try:
