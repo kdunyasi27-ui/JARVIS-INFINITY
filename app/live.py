@@ -97,8 +97,7 @@ async def live_voice(websocket: WebSocket):
                 )
 
                 await websocket.send_json({
-                    "error": "Gemini bağlantı kurulumu başarısız. "
-                             "Render Logs kayıtlarını kontrol edin."
+                    "error": "Gemini bağlantı kurulumu başarısız."
                 })
                 await websocket.close(code=1011)
                 return
@@ -119,9 +118,11 @@ async def live_voice(websocket: WebSocket):
                     if not isinstance(message, dict):
                         continue
 
-                    if isinstance(message.get("realtimeInput"), dict):
+                    realtime_input = message.get("realtimeInput")
+
+                    if isinstance(realtime_input, dict):
                         await gemini.send(json.dumps({
-                            "realtimeInput": message["realtimeInput"]
+                            "realtimeInput": realtime_input
                         }))
 
             async def gemini_to_browser():
@@ -159,24 +160,10 @@ async def live_voice(websocket: WebSocket):
         raise
 
     except Exception as exc:
-        status = getattr(
-            getattr(exc, "response", None),
-            "status_code",
-            None
-        )
 
-        received = getattr(exc, "rcvd", None)
-        sent = getattr(exc, "sent", None)
-
-        logger.error(
-            "Gemini Live hata: %s | HTTP: %s | "
-            "Gelen kapatma kodu: %s | Gelen neden: %s | "
-            "Gönderilen kapatma: %s",
-            type(exc).__name__,
-            status,
-            getattr(received, "code", None),
-            getattr(received, "reason", None),
-            getattr(sent, "code", None)
+        logger.exception(
+            "JARVIS LIVE AYRINTILI HATA | Tür: %s",
+            type(exc).__name__
         )
 
         try:
@@ -185,5 +172,8 @@ async def live_voice(websocket: WebSocket):
                          + type(exc).__name__
             })
             await websocket.close(code=1011)
+
         except Exception:
-            pass
+            logger.warning(
+                "Tarayıcıya hata bildirimi gönderilemedi."
+            )
